@@ -1,0 +1,150 @@
+<div class="app-shell">
+  <aside class="sidebar" aria-label="NewsAI navigation">
+    <div class="brand-block">
+      <div class="brand-mark">N</div>
+      <div>
+        <p class="eyebrow">NewsAI</p>
+        <h1>{{ title() }}</h1>
+      </div>
+    </div>
+
+    <nav class="nav-list">
+      <a class="active" href="#">Feed</a>
+      <a href="#">Hot News</a>
+      <a href="#">Discover</a>
+      <a href="#">Story Chat</a>
+    </nav>
+
+    <div class="status-panel">
+      <span class="status-dot"></span>
+      <div>
+        <strong>Backend Ready</strong>
+        <p>Connects to localhost:8080</p>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <section class="topbar">
+      <div>
+        <p class="eyebrow">Story-first news</p>
+        <h2>Read headlines like a feed, open them like a podcast.</h2>
+      </div>
+      <button class="primary-action">Sync News</button>
+    </section>
+
+    <section class="toolbar" aria-label="News filters">
+      <label class="search-box">
+        <span>Search</span>
+        <input type="text" value="AI policy" />
+      </label>
+      <label>
+        <span>Country</span>
+        <select>
+          <option>World</option>
+          <option>India</option>
+          <option>United States</option>
+        </select>
+      </label>
+      <label>
+        <span>Category</span>
+        <select>
+          <option>Technology</option>
+          <option>Politics</option>
+          <option>Sports</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="dashboard-grid">
+      <div class="feed-column">
+        <div class="section-title">
+          <h3>Latest Feed</h3>
+          <span>5 articles</span>
+        </div>
+
+        <article class="news-card featured-card">
+          <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=900&q=80" alt="Newsroom screens" />
+          <div class="card-content">
+            <div class="meta-row">
+              <span>Technology</span>
+              <span>United States</span>
+            </div>
+            <h4>Microsoft bets on agent-first enterprise work</h4>
+            <p>AI assistants are moving from helpful side tools into the center of daily business workflows.</p>
+            <div class="card-footer">
+              <span>ZDNet</span>
+              <button>Open Story</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="news-card compact-card">
+          <div>
+            <div class="meta-row">
+              <span>Sports</span>
+              <span>India</span>
+            </div>
+            <h4>Highest successful T20 chases at Narendra Modi Stadium</h4>
+            <p>Records, context, and why Ahmedabad keeps giving batters a main-character moment.</p>
+          </div>
+          <button>Read</button>
+        </article>
+
+        <article class="news-card compact-card">
+          <div>
+            <div class="meta-row">
+              <span>Business</span>
+              <span>India</span>
+            </div>
+            <h4>Remittances face pressure from global labor shifts</h4>
+            <p>NewsAI turns the economic headline into a clear story about household money flows.</p>
+          </div>
+          <button>Read</button>
+        </article>
+      </div>
+
+      <aside class="insight-column">
+        <section class="panel hot-panel">
+          <div class="section-title">
+            <h3>Hot News</h3>
+            <span>Score based</span>
+          </div>
+          <ol>
+            <li>
+              <strong>Identity theft signs people miss</strong>
+              <span>Importance 92</span>
+            </li>
+            <li>
+              <strong>AI reshapes workplace tools</strong>
+              <span>Importance 89</span>
+            </li>
+            <li>
+              <strong>Exam controversy sparks debate</strong>
+              <span>Importance 84</span>
+            </li>
+          </ol>
+        </section>
+
+        <section class="panel story-panel">
+          <p class="eyebrow">Story Preview</p>
+          <h3>Human voice, not robotic summary.</h3>
+          <p>
+            NewsAI explains backstory first, then the current event, using a conversational tone that feels ready for audio.
+          </p>
+          <button>Generate Story</button>
+        </section>
+
+        <section class="panel discover-panel">
+          <div class="section-title">
+            <h3>Couldn’t find it?</h3>
+            <span>Async</span>
+          </div>
+          <textarea>Pune Wipro case</textarea>
+          <button>Discover News</button>
+          <p>Returns first ready results, then keeps processing more in the background.</p>
+        </section>
+      </aside>
+    </section>
+  </main>
+</div>
