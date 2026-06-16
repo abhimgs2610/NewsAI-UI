@@ -1,150 +1,372 @@
-<div class="app-shell">
-  <aside class="sidebar" aria-label="NewsAI navigation">
-    <div class="brand-block">
-      <div class="brand-mark">N</div>
-      <div>
-        <p class="eyebrow">NewsAI</p>
-        <h1>{{ title() }}</h1>
-      </div>
-    </div>
+<div class="app-shell" (click)="closeExploreDropdown()">
+  <aside class="side-nav">
+    <div class="brand">News<span>AI</span></div>
 
-    <nav class="nav-list">
-      <a class="active" href="#">Feed</a>
-      <a href="#">Hot News</a>
-      <a href="#">Discover</a>
-      <a href="#">Story Chat</a>
-    </nav>
+    <button class="nav-item" [class.active]="view === 'home'" type="button" (click)="showHome()">
+      <span>Home</span>
+    </button>
 
-    <div class="status-panel">
-      <span class="status-dot"></span>
-      <div>
-        <strong>Backend Ready</strong>
-        <p>Connects to localhost:8080</p>
+    <button class="nav-item explore-toggle" [class.active]="view === 'explore'" type="button" (click)="toggleExplore()">
+      <span>Explore</span>
+
+    </button>
+
+    @if (exploreOpen) {
+      <div class="explore-menu">
+        @for (option of exploreOptions; track option.type) {
+          <button type="button" [class.active]="activeExplore === option.type" (click)="selectExplore(option.type)">
+            {{ option.label }}
+          </button>
+        }
       </div>
-    </div>
+    }
+
+
+
+    <button class="nav-item" [class.active]="view === 'discover'" type="button" (click)="showDiscover()">
+      <span>Discover</span>
+    </button>
+
+    <button class="nav-item muted" type="button"><span>Saved</span></button>
+    <button class="nav-item muted" type="button"><span>History</span></button>
+    <button class="nav-item muted" type="button"><span>Profile</span></button>
+    <button class="nav-item muted" type="button"><span>Settings</span></button>
+
+    <button class="logout" type="button">Logout</button>
   </aside>
 
-  <main class="main-content">
-    <section class="topbar">
-      <div>
-        <p class="eyebrow">Story-first news</p>
-        <h2>Read headlines like a feed, open them like a podcast.</h2>
-      </div>
-      <button class="primary-action">Sync News</button>
-    </section>
+  <main class="page-area">
+    @if (errorMessage) {
+      <div class="toast">{{ errorMessage }}</div>
+    }
 
-    <section class="toolbar" aria-label="News filters">
-      <label class="search-box">
-        <span>Search</span>
-        <input type="text" value="AI policy" />
-      </label>
-      <label>
-        <span>Country</span>
-        <select>
-          <option>World</option>
-          <option>India</option>
-          <option>United States</option>
-        </select>
-      </label>
-      <label>
-        <span>Category</span>
-        <select>
-          <option>Technology</option>
-          <option>Politics</option>
-          <option>Sports</option>
-        </select>
-      </label>
-    </section>
+    @if (view === 'home') {
+      <section class="home-page">
+        <header class="top-bar">
+          <div class="search-box">
+            <span>Search</span>
+            <input type="text" [(ngModel)]="filters.q" (keyup.enter)="searchHome()" (blur)="searchHome()" placeholder="Search news, topics, places..." />
+            @if (filters.q.trim()) {
+              <button class="clear-search" type="button" aria-label="Clear search" (mousedown)="$event.preventDefault()" (click)="clearSearch()">x</button>
+            }
+          </div>
+          <button class="icon-button" type="button" aria-label="Notifications"></button>
+          <div class="avatar">A</div>
+        </header>
 
-    <section class="dashboard-grid">
-      <div class="feed-column">
-        <div class="section-title">
-          <h3>Latest Feed</h3>
-          <span>5 articles</span>
+        <section class="welcome-block">
+          <p>Good Morning</p>
+          <h1>Stay informed with AI-powered stories.</h1>
+          <div class="pill-row">
+            @for (category of topCategories; track category) {
+              <button type="button" [class.active]="activeTopFilter === category" (click)="applyTopFilter(category)">{{ category }}</button>
+            }
+          </div>
+        </section>
+
+        <section class="content-section">
+          <div class="section-title">
+            <h2>{{ activeTopFilter || 'Search Results' }}</h2>
+            <button type="button" (click)="showAllNews(activeTopFilter || 'Search Results')">View all</button>
+          </div>
+
+          <div class="recommended-list home-list">
+            @if (homeLoading && homeStories.length === 0) {
+              <div class="empty-card">Loading latest stories...</div>
+            } @else if (homeStories.length === 0) {
+              <div class="empty-card empty-discover-card">
+                <p>No stories found.</p>
+                <button type="button" (click)="openDiscoverFromSearch()">Tell us more about it by clicking here</button>
+              </div>
+            } @else {
+              @for (article of homeStories; track article.id) {
+                <article class="compact-story">
+                  <img [src]="article.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=600&q=80'" [alt]="article.headline" />
+                  <div>
+                    <h3>{{ article.headline }}</h3>
+                    <p>{{ article.briefStory }}</p>
+                    <span>2 min read - {{ article.publishedAt }}</span>
+                  </div>
+                  <button type="button" (click)="openStory(article, false)">Open</button>
+                </article>
+              }
+            }
+          </div>
+        </section>
+      </section>
+    }
+
+    @if (view === 'explore') {
+      <section class="explore-page">
+        <header class="page-header">
+          <div>
+            <h1>{{ currentExploreOption.label }} News</h1>
+            <p>{{ currentExploreOption.caption }}</p>
+          </div>
+
+          <div class="explore-header-actions">
+            @if (hasExploreSelection) {
+              <button class="view-all-inline" type="button" (click)="showAllNews(currentExploreOption.label + ' News')">View all</button>
+            }
+
+            <div class="explore-picker">
+              <span>Choose one</span>
+              <div class="compact-dropdown" (click)="$event.stopPropagation()">
+                <button type="button" (click)="openExploreDropdown()">
+                  {{ activeFilterValue }}
+                </button>
+                @if (activeDropdownOpen) {
+                  <div class="dropdown-panel">
+                    <div class="dropdown-search-wrap">
+                      <input class="dropdown-search" type="text" [(ngModel)]="dropdownSearch" placeholder="Search {{ currentExploreOption.label.toLowerCase() }}" />
+                    </div>
+                    <div class="dropdown-options">
+                      @if (filteredActiveDropdownOptions.length === 0) {
+                        <div class="dropdown-empty">No options found.</div>
+                      } @else {
+                        @for (option of filteredActiveDropdownOptions; track option) {
+                          <button type="button" [class.selected]="option === activeFilterValue" (click)="chooseDropdownValue(option)">
+                            {{ option }}
+                          </button>
+                        }
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </header>
+        <div class="explore-list">
+          @if (feedLoading && hasExploreSelection && exploreStories.length === 0) {
+            <div class="empty-card">Loading {{ currentExploreOption.label }} news...</div>
+          } @else if (!hasExploreSelection) {
+            <div class="empty-card">Choose one {{ currentExploreOption.label.toLowerCase() }} to view news.</div>
+          } @else if (exploreStories.length === 0) {
+            <div class="empty-card">No stories found.</div>
+          } @else {
+            @for (article of exploreStories; track article.id) {
+              <article class="explore-row">
+                <img [src]="article.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=600&q=80'" [alt]="article.headline" />
+                <div>
+                  <h2>{{ article.headline }}</h2>
+                  <p>{{ article.briefStory }}</p>
+                  <span>{{ article.category }} - {{ article.country }} - {{ article.publishedAt }}</span>
+                </div>
+                <button type="button" (click)="openStory(article, false)">Play</button>
+              </article>
+            }
+          }
+        </div>
+      </section>
+    }
+
+    @if (view === 'discover') {
+      <section class="discover-page">
+        <header class="page-header">
+          <div>
+            <h1>Discover News</h1>
+            <p>Tell NewsAI what you could not find.</p>
+          </div>
+        </header>
+
+        <section class="discover-card">
+          <label class="discover-context">
+            <span>Context <strong>*</strong></span>
+            <textarea [(ngModel)]="discoverContext" (keydown.enter)="$event.preventDefault(); startDiscover()" placeholder="What news are you looking for?"></textarea>
+          </label>
+
+          <div class="discover-fields">
+            <label>
+              <span>Country</span>
+              <input type="text" [(ngModel)]="discoverCountry" (keydown.enter)="$event.preventDefault(); startDiscover()" placeholder="optional" />
+            </label>
+            <label>
+              <span>State</span>
+              <input type="text" [(ngModel)]="discoverState" (keydown.enter)="$event.preventDefault(); startDiscover()" placeholder="optional" />
+            </label>
+            <label>
+              <span>City</span>
+              <input type="text" [(ngModel)]="discoverCity" (keydown.enter)="$event.preventDefault(); startDiscover()" placeholder="optional" />
+            </label>
+          </div>
+
+          <button class="discover-submit" type="button" (click)="startDiscover()" [disabled]="discoverLoading">
+            {{ discoverLoading ? 'Discovering...' : 'Discover News' }}
+          </button>
+        </section>
+
+        @if (discoverResponse) {
+          <section class="discover-status">
+            <strong>{{ discoverResponse.status }}</strong>
+            <p>{{ discoverResponse.message }}</p>
+          </section>
+        }
+
+        <div class="explore-list">
+          @if (discoverLoading && discoverResults.length === 0) {
+            <div class="empty-card">Looking for matching news...</div>
+          } @else if (discoverResults.length === 0) {
+            <div class="empty-card">No discovered stories yet.</div>
+          } @else {
+            @for (article of discoverResults; track article.id) {
+              <article class="explore-row">
+                <img [src]="article.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=600&q=80'" [alt]="article.headline" />
+                <div>
+                  <h2>{{ article.headline }}</h2>
+                  <p>{{ article.briefStory }}</p>
+                  <span>{{ article.category }} - {{ article.country }} - {{ article.publishedAt }}</span>
+                </div>
+                <button type="button" (click)="openStory(article, false)">Play</button>
+              </article>
+            }
+          }
         </div>
 
-        <article class="news-card featured-card">
-          <img src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=900&q=80" alt="Newsroom screens" />
-          <div class="card-content">
-            <div class="meta-row">
-              <span>Technology</span>
-              <span>United States</span>
-            </div>
-            <h4>Microsoft bets on agent-first enterprise work</h4>
-            <p>AI assistants are moving from helpful side tools into the center of daily business workflows.</p>
-            <div class="card-footer">
-              <span>ZDNet</span>
-              <button>Open Story</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="news-card compact-card">
+        @if (discoverResponse?.hasMore) {
+          <button class="load-more-news" type="button" (click)="loadMoreDiscover()" [disabled]="discoverLoading">
+            {{ discoverLoading ? 'Loading...' : 'Load More' }}
+          </button>
+        }
+      </section>
+    }
+    @if (view === 'allNews') {
+      <section class="all-news-page">
+        <header class="page-header">
           <div>
-            <div class="meta-row">
-              <span>Sports</span>
-              <span>India</span>
-            </div>
-            <h4>Highest successful T20 chases at Narendra Modi Stadium</h4>
-            <p>Records, context, and why Ahmedabad keeps giving batters a main-character moment.</p>
+            <h1>{{ allNewsTitle }}</h1>
+            <p>Browse every available story from this section.</p>
           </div>
-          <button>Read</button>
-        </article>
+          <button class="back-button" type="button" (click)="backFromAllNews()">{{ allNewsBackLabel }}</button>
+        </header>
 
-        <article class="news-card compact-card">
+        <div class="all-news-list">
+          @if (allNewsLoading && allNewsStories.length === 0) {
+            <div class="empty-card">Loading all stories...</div>
+          } @else if (allNewsStories.length === 0) {
+            <div class="empty-card">No stories found.</div>
+          } @else {
+            @for (article of allNewsStories; track article.id) {
+              <article class="explore-row">
+                <img [src]="article.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=600&q=80'" [alt]="article.headline" />
+                <div>
+                  <h2>{{ article.headline }}</h2>
+                  <p>{{ article.briefStory }}</p>
+                  <span>{{ article.category }} - {{ article.country }} - {{ article.publishedAt }}</span>
+                </div>
+                <button type="button" (click)="openStory(article, false)">Play</button>
+              </article>
+            }
+          }
+        </div>
+        @if (allNewsHasMore) {
+          <button class="load-more-news" type="button" (click)="loadMoreAllNews()" [disabled]="allNewsLoading">
+            {{ allNewsLoading ? 'Loading...' : 'Load More' }}
+          </button>
+        }
+      </section>
+    }
+    @if (view === 'story') {
+      <section class="reader-page">
+        <header class="reader-top">
+          <button type="button" (click)="backToStories()">Back to all stories</button>
           <div>
-            <div class="meta-row">
-              <span>Business</span>
-              <span>India</span>
+            <button type="button">Save</button>
+            <button type="button">Share</button>
+          </div>
+        </header>
+
+        @if (selectedArticle) {
+          <article class="reader-card">
+            <div class="reader-copy">
+              <span class="badge">{{ selectedArticle.country || 'News' }}</span>
+              <h1>{{ selectedArticle.headline }}</h1>
+              <p class="meta">2 min read - {{ selectedArticle.source }} - {{ selectedArticle.publishedAt }}</p>
+              <a href="#" class="original-link">Original Article</a>
             </div>
-            <h4>Remittances face pressure from global labor shifts</h4>
-            <p>NewsAI turns the economic headline into a clear story about household money flows.</p>
-          </div>
-          <button>Read</button>
-        </article>
-      </div>
+            <img [src]="selectedArticle.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=900&q=80'" [alt]="selectedArticle.headline" />
+          </article>
 
-      <aside class="insight-column">
-        <section class="panel hot-panel">
-          <div class="section-title">
-            <h3>Hot News</h3>
-            <span>Score based</span>
-          </div>
-          <ol>
-            <li>
-              <strong>Identity theft signs people miss</strong>
-              <span>Importance 92</span>
-            </li>
-            <li>
-              <strong>AI reshapes workplace tools</strong>
-              <span>Importance 89</span>
-            </li>
-            <li>
-              <strong>Exam controversy sparks debate</strong>
-              <span>Importance 84</span>
-            </li>
-          </ol>
-        </section>
+          <section class="story-text-card">
+            <div class="story-actions">
+              <strong>AI Story (Storytelling)</strong>
+              <button type="button" (click)="openAudio(selectedArticle)">Listen</button>
+            </div>
+            @if (storyLoading) {
+              <p>Generating story...</p>
+            } @else {
+              <p>{{ story || selectedArticle.briefStory }}</p>
+            }
+          </section>
 
-        <section class="panel story-panel">
-          <p class="eyebrow">Story Preview</p>
-          <h3>Human voice, not robotic summary.</h3>
-          <p>
-            NewsAI explains backstory first, then the current event, using a conversational tone that feels ready for audio.
-          </p>
-          <button>Generate Story</button>
-        </section>
+          <section class="ask-card">
+            <h2>Ask about this story</h2>
+            @for (turn of chatTurns; track turn.question + $index) {
+              <div class="chat-turn">
+                <strong>{{ turn.question }}</strong>
+                <p>{{ turn.answer }}</p>
+              </div>
+            }
+            <div class="ask-row">
+              <input [(ngModel)]="chatQuestion" placeholder="Ask a follow-up question" />
+              <button type="button" (click)="askQuestion()" [disabled]="chatLoading || !chatQuestion.trim()">
+                {{ chatLoading ? 'Asking...' : 'Ask' }}
+              </button>
+            </div>
+          </section>
+        }
+      </section>
+    }
 
-        <section class="panel discover-panel">
-          <div class="section-title">
-            <h3>Couldn’t find it?</h3>
-            <span>Async</span>
+    @if (view === 'audio') {
+      <section class="audio-page">
+        <header class="reader-top">
+          <button type="button" (click)="view = 'story'">Back to story</button>
+        </header>
+
+        @if (selectedArticle) {
+          <div class="audio-card">
+            <img [src]="selectedArticle.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=900&q=80'" [alt]="selectedArticle.headline" />
+            <div>
+              <span class="badge">{{ selectedArticle.country || 'News' }}</span>
+              <h1>{{ selectedArticle.headline }}</h1>
+              <p>2 min story - AI Story (Storytelling)</p>
+            </div>
           </div>
-          <textarea>Pune Wipro case</textarea>
-          <button>Discover News</button>
-          <p>Returns first ready results, then keeps processing more in the background.</p>
-        </section>
-      </aside>
-    </section>
+
+          <div class="waveform" aria-hidden="true">
+            @for (bar of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]; track bar) {
+              <span [style.height.px]="8 + (bar % 8) * 5"></span>
+            }
+          </div>
+
+          <div class="audio-controls">
+            <button type="button">15</button>
+            <button class="primary-play" type="button">Play</button>
+            <button type="button">15</button>
+          </div>
+
+          <div class="audio-settings">
+            <label>
+              <span>Language</span>
+              <select><option>English</option></select>
+            </label>
+            <label>
+              <span>Playback Speed</span>
+              <select><option>1.0x</option></select>
+            </label>
+            <label class="toggle-row">
+              <span>Auto Play Next</span>
+              <input type="checkbox" checked />
+            </label>
+          </div>
+        }
+      </section>
+    }
   </main>
+  <button class="back-to-top" type="button" aria-label="Back to top" title="Back to top" (click)="scrollToTop()">&uarr;</button>
 </div>
+
+
+
+
