@@ -27,7 +27,7 @@
       <span>Discover</span>
     </button>
 
-    <button class="nav-item muted" type="button"><span>Saved</span></button>
+    <button class="nav-item" [class.active]="view === 'saved'" type="button" (click)="showSaved()"><span>Saved</span></button>
     <button class="nav-item muted" type="button"><span>History</span></button>
     <button class="nav-item muted" type="button"><span>Profile</span></button>
     <button class="nav-item muted" type="button"><span>Settings</span></button>
@@ -67,7 +67,9 @@
         <section class="content-section">
           <div class="section-title">
             <h2>{{ activeTopFilter || 'Search Results' }}</h2>
-            <button type="button" (click)="showAllNews(activeTopFilter || 'Search Results')">View all</button>
+            @if (homeStories.length > 0) {
+              <button type="button" (click)="showAllNews(activeTopFilter || 'Search Results')">View all</button>
+            }
           </div>
 
           <div class="recommended-list home-list">
@@ -230,6 +232,34 @@
         }
       </section>
     }
+    @if (view === 'saved') {
+      <section class="all-news-page">
+        <header class="page-header">
+          <div>
+            <h1>Saved Stories</h1>
+            <p>Stories you saved for later.</p>
+          </div>
+        </header>
+
+        <div class="all-news-list">
+          @if (savedStories.length === 0) {
+            <div class="empty-card">No saved stories yet.</div>
+          } @else {
+            @for (article of savedStories; track article.id) {
+              <article class="explore-row">
+                <img [src]="article.imageUrl || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=600&q=80'" [alt]="article.headline" />
+                <div>
+                  <h2>{{ article.headline }}</h2>
+                  <p>{{ article.briefStory }}</p>
+                  <span>{{ article.category }} - {{ article.country }} - {{ article.publishedAt }}</span>
+                </div>
+                <button type="button" (click)="openStory(article, false)">Play</button>
+              </article>
+            }
+          }
+        </div>
+      </section>
+    }
     @if (view === 'allNews') {
       <section class="all-news-page">
         <header class="page-header">
@@ -271,7 +301,7 @@
         <header class="reader-top">
           <button type="button" (click)="backToStories()">Back to all stories</button>
           <div>
-            <button type="button">Save</button>
+            <button type="button" (click)="toggleSaveSelectedArticle()">{{ selectedArticle && isSaved(selectedArticle.id) ? 'Unsave' : 'Save' }}</button>
             <button type="button">Share</button>
           </div>
         </header>
@@ -366,6 +396,9 @@
   </main>
   <button class="back-to-top" type="button" aria-label="Back to top" title="Back to top" (click)="scrollToTop()">&uarr;</button>
 </div>
+
+
+
 
 
 

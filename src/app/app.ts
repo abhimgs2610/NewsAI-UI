@@ -9,7 +9,7 @@ interface ChatTurn {
   answer: string;
 }
 
-type AppView = 'home' | 'explore' | 'discover' | 'story' | 'audio' | 'allNews';
+type AppView = 'home' | 'explore' | 'discover' | 'saved' | 'story' | 'audio' | 'allNews';
 type ExploreType = 'state' | 'city' | 'category';
 
 interface ExploreOption {
@@ -37,6 +37,9 @@ export class App implements OnInit {
   activeTopFilter = 'Top Stories';
 
   view: AppView = 'home';
+  private storyBackView: AppView = 'home';
+  private storyBackExploreOpen = false;
+  private storyBackScrollY = 0;
   exploreOpen = false;
   activeExplore: ExploreType = 'state';
   activeDropdownOpen = false;
@@ -48,6 +51,7 @@ export class App implements OnInit {
   allNewsHasMore = false;
 
   private readonly allNewsPageSize = 50;
+  private readonly savedStorageKey = 'newsai.savedStories';
 
   filters: FeedFilters = {
     q: '',
@@ -79,6 +83,7 @@ export class App implements OnInit {
   discoverResponse: DiscoverResponse | null = null;
   discoverResults: NewsFeedItem[] = [];
   discoverLoading = false;
+  savedStories: NewsFeedItem[] = [];
 
   feedLoading = false;
   hotLoading = false;
@@ -92,6 +97,7 @@ export class App implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadSavedStories();
     window.setTimeout(() => {
       this.loadHotNews();
       this.refreshView();
@@ -239,6 +245,13 @@ export class App implements OnInit {
     this.refreshView();
   }
 
+  showSaved(): void {
+    this.view = 'saved';
+    this.exploreOpen = false;
+    this.activeDropdownOpen = false;
+    this.refreshView();
+  }
+
   showDiscover(prefillContext = ''): void {
     this.view = 'discover';
     this.exploreOpen = false;
@@ -285,6 +298,7 @@ export class App implements OnInit {
     this.exploreOpen = this.allNewsBackView === 'explore';
     this.activeDropdownOpen = false;
     this.refreshView();
+    window.setTimeout(() => window.scrollTo({ top: this.storyBackScrollY, behavior: 'auto' }), 0);
   }
 
   get allNewsBackLabel(): string {
@@ -454,8 +468,14 @@ export class App implements OnInit {
 
 
   openStory(article: NewsFeedItem, refresh: boolean): void {
+    if (this.view !== 'story' && this.view !== 'audio') {
+      this.storyBackView = this.view;
+      this.storyBackExploreOpen = this.exploreOpen;
+      this.storyBackScrollY = window.scrollY;
+    }
     this.selectedArticle = article;
     this.view = 'story';
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: 'auto' }), 0);
     this.storyLoading = true;
     this.story = '';
     this.chatTurns = [];
@@ -474,6 +494,23 @@ export class App implements OnInit {
       });
   }
 
+  toggleSaveSelectedArticle(): void {
+    if (!this.selectedArticle) {
+      return;
+    }
+    if (this.isSaved(this.selectedArticle.id)) {
+      this.savedStories = this.savedStories.filter(article => article.id !== this.selectedArticle?.id);
+    } else {
+      this.savedStories = [this.selectedArticle, ...this.savedStories];
+    }
+    this.persistSavedStories();
+    this.refreshView();
+  }
+
+  isSaved(articleId: number): boolean {
+    return this.savedStories.some(article => article.id === articleId);
+  }
+
   openAudio(article?: NewsFeedItem | null): void {
     if (article) {
       this.selectedArticle = article;
@@ -488,8 +525,11 @@ export class App implements OnInit {
   }
 
   backToStories(): void {
-    this.view = this.exploreOpen ? 'explore' : 'home';
+    this.view = this.storyBackView;
+    this.exploreOpen = this.storyBackExploreOpen;
+    this.activeDropdownOpen = false;
     this.refreshView();
+    window.setTimeout(() => window.scrollTo({ top: this.storyBackScrollY, behavior: 'auto' }), 0);
   }
 
   askQuestion(): void {
@@ -580,6 +620,19 @@ export class App implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  private loadSavedStories(): void {
+    try {
+      const raw = localStorage.getItem(this.savedStorageKey);
+      this.savedStories = raw ? JSON.parse(raw) as NewsFeedItem[] : [];
+    } catch {
+      this.savedStories = [];
+    }
+  }
+
+  private persistSavedStories(): void {
+    localStorage.setItem(this.savedStorageKey, JSON.stringify(this.savedStories));
+  }
+
   private refreshView(): void {
     this.changeDetector.detectChanges();
     window.setTimeout(() => this.changeDetector.detectChanges(), 0);
@@ -598,6 +651,15 @@ export class App implements OnInit {
     }, 4500);
   }
 }
+
+
+
+
+
+
+
+
+
 
 
 

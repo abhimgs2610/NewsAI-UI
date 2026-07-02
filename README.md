@@ -12,9 +12,12 @@ Angular frontend for the NewsAI backend. It provides a story-first news experien
 - Searchable Explore dropdowns with no API call until the user chooses a value.
 - View All and Load More flows using `limit=50` and `offset` pagination.
 - Story reader page using `/api/news/{id}`.
+- Story page opens at the top and returns to the previous list scroll position when going back.
 - Follow-up Q&A chat using `/api/news/{id}/ask`.
 - Discover News page using `/api/news/discover` with mandatory context and optional country/state/city.
 - Discover load-more support using `discoverRequestId` and `loadMore=true`.
+- Save and Unsave stories from the story reader.
+- Saved stories page backed by browser local storage.
 
 ## Backend Requirement
 
@@ -78,6 +81,7 @@ dist/NewsAI-UI
 - Clicking Home resets the page to the default Top Stories view.
 - Main search calls `/api/news/feed?q={keyword}&searchValue=true&limit=20&offset=0`.
 - If no search results are found, the user can open Discover from the empty state.
+- View All loads 50 records and Load More increments `offset` by 50.
 
 ### Explore
 
@@ -97,8 +101,23 @@ dist/NewsAI-UI
 - Results come from `/api/news/discover`.
 - Load More reuses the returned `discoverRequestId`.
 
+### Story Reader
+
+- Opening a story scrolls to the top of the reader page.
+- Back to all stories returns to the previous page and restores the previous scroll position.
+- Save adds the current story to the Saved page.
+- Once saved, the button changes to Unsave and removes the story from Saved.
+- Story chat calls `/api/news/{id}/ask`.
+
+### Saved
+
+- Sidebar Saved opens the saved stories list.
+- Saved list cards can open the full story reader.
+- Saved stories persist in browser local storage.
+- Saved stories are currently frontend-only and are not synced to the backend database.
+
 ## Useful Commit Note
 
 ```text
-Update NewsAI UI with Explore, global search, story, chat, and discover flows
+Update NewsAI UI with Explore, search, story, chat, discover, and saved flows
 ```
